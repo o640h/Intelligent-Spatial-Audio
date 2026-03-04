@@ -3,6 +3,13 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Audio / large outputs
+data/
+outputs/
+
+# Virtual environment
+.venv/
+
 # C extensions
 *.so
 
