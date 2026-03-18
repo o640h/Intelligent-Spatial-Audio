@@ -24,14 +24,14 @@ def target_from_features(row):
         return 0.00, 0.10, 0.35
 
     elif "vocals" in file_name:
-        return 0.00, 0.20, 0.22
+        return 0.00, 0.30, 0.22
 
     elif "drums" in file_name:
-        width = 0.60 if centroid > 6000 else 0.50
+        width = 0.70 if centroid > 6000 else 0.50
         return 0.00, width, 0.28
 
     else:
-        width = 0.75 if centroid > 3000 else 0.60
+        width = 0.80 if centroid > 3000 else 0.60
         depth = 0.40 if zcr < 0.08 else 0.32
         return 0.00, width, depth
 

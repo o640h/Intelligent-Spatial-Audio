@@ -39,17 +39,17 @@ def base_rule_decision(row):
 
     elif "vocals" in file_name:
         pan = 0.00
-        width = 0.18
+        width = 0.30
         depth = 0.22
 
     elif "drums" in file_name:
         pan = 0.00
-        width = 0.55 if centroid > 6000 else 0.45
+        width = 0.70 if centroid > 6000 else 0.50
         depth = 0.28
 
     else:
         pan = 0.00
-        width = 0.70 if centroid > 3000 else 0.55
+        width = 0.80 if centroid > 3000 else 0.55
         depth = 0.45 if zcr < 0.08 else 0.35
 
     return pan, width, depth

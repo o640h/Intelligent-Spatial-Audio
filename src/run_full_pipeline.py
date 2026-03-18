@@ -1,11 +1,12 @@
 import argparse
 import subprocess
+import sys
 from pathlib import Path
 
 
 def run_command(cmd):
     print("\n" + "=" * 80)
-    print("RUNNING:", " ".join(cmd))
+    print("RUNNING:", " ".join(map(str, cmd)))
     print("=" * 80)
     subprocess.run(cmd, check=True)
 
@@ -33,25 +34,24 @@ def main():
     render_outdir = Path("outputs/rendered") / track_name
     final_mix_name = f"{track_name}_enhanced.wav"
 
-    # 1. Stem separation
+    py = sys.executable
+
     run_command([
-        "python", "src/separate_demucs.py",
+        py, "src/separate_demucs.py",
         "--infile", str(infile),
         "--outdir", "outputs/stems",
         "--model", args.model,
         "--device", args.device,
     ])
 
-    # 2. Feature extraction
     run_command([
-        "python", "src/extract_features.py",
+        py, "src/extract_features.py",
         "--stemdir", str(stems_dir),
         "--outfile", str(features_csv),
     ])
 
-    # 3. Spatial decision (rule + ML)
     run_command([
-        "python", "src/spatial_decision.py",
+        py, "src/spatial_decision.py",
         "--features", str(features_csv),
         "--outfile", str(spatial_ml_csv),
         "--track", track_name,
@@ -61,19 +61,17 @@ def main():
 
     spatial_csv_to_render = spatial_ml_csv
 
-    # 4. Optional DEAP refinement
     if args.use_deap:
         run_command([
-            "python", "src/deap_optimise.py",
+            py, "src/deap_optimise.py",
             "--features", str(features_csv),
             "--spatial", str(spatial_ml_csv),
             "--outfile", str(spatial_deap_csv),
         ])
         spatial_csv_to_render = spatial_deap_csv
 
-    # 5. Render final mix
     run_command([
-        "python", "src/render_spatial_mix.py",
+        py, "src/render_spatial_mix.py",
         "--stemdir", str(stems_dir),
         "--spatial", str(spatial_csv_to_render),
         "--outdir", str(render_outdir),

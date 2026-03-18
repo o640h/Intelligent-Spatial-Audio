@@ -68,14 +68,15 @@ def narrow_toward_mono(stereo: np.ndarray, mono_amount: float):
     return np.stack([new_left, new_right], axis=1).astype(np.float32)
 
 
-def adjust_width_ms(stereo: np.ndarray, width: float):
+def adjust_width_ms(stereo: np.ndarray, width: float, stem_name: str):
     """
-    Safer M/S width control on already-stereo material.
+    Stem-aware M/S width control.
     width:
-        0.0 = narrow/mono
-        1.0 = original-ish / slightly enhanced
+        0.0 = narrow
+        1.0 = strong widening
     """
     width = clamp(float(width), 0.0, 1.0)
+    stem_name = stem_name.lower()
 
     left = stereo[:, 0]
     right = stereo[:, 1]
@@ -83,13 +84,21 @@ def adjust_width_ms(stereo: np.ndarray, width: float):
     mid = 0.5 * (left + right)
     side = 0.5 * (left - right)
 
-    # Conservative mapping:
-    # 0.0 -> mono
-    # 0.5 -> moderate width
-    # 1.0 -> original/slightly enhanced
-    side_scale = 0.15 + 1.00 * width
-    if width < 0.15:
-        side_scale = 0.05 + 0.60 * width
+    # Stem-aware widening strength
+    if "bass" in stem_name:
+        base = 0.10
+        mult = 0.40
+    elif "vocals" in stem_name:
+        base = 0.20
+        mult = 1.40
+    elif "drums" in stem_name:
+        base = 0.30
+        mult = 1.80
+    else:  # other
+        base = 0.35
+        mult = 2.20
+
+    side_scale = base + mult * width
 
     new_left = mid + side * side_scale
     new_right = mid - side * side_scale
@@ -123,28 +132,21 @@ def stereo_balance_pan(stereo: np.ndarray, pan: float):
 
 
 def apply_depth_safe(stereo: np.ndarray, depth: float):
-    """
-    Temporary conservative depth stage.
-    Only a very small gain trim.
-    No reverb, no LPF.
-    """
-    depth = clamp(float(depth), 0.0, 1.0)
-    gain = 1.0 - 0.06 * depth
-    return (stereo * gain).astype(np.float32)
+    return stereo.astype(np.float32)
 
 
 def low_band_mono_amount(file_name: str):
     file_name = file_name.lower()
 
     if "bass" in file_name:
-        return 0.95
+        return 0.85
     if "drums" in file_name:
-        return 0.90
+        return 0.75
     if "other" in file_name:
-        return 0.70
+        return 0.45
     if "vocals" in file_name:
-        return 0.40
-    return 0.80
+        return 0.20
+    return 0.60
 
 
 def process_stem(audio: np.ndarray, sr: int, stem_name: str, pan: float, width: float, depth: float):
@@ -154,7 +156,7 @@ def process_stem(audio: np.ndarray, sr: int, stem_name: str, pan: float, width: 
     low = narrow_toward_mono(low, low_band_mono_amount(stem_name))
 
     # Only widen highs/mids
-    high = adjust_width_ms(high, width)
+    high = adjust_width_ms(high, width, stem_name)
 
     # Apply subtle balance panning after width
     combined = low + high
