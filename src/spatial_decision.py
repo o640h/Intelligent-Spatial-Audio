@@ -106,7 +106,7 @@ def main():
     parser.add_argument("--outfile", default="outputs/spatial/spatial_params.csv", help="Output CSV")
     parser.add_argument("--track", default="default_track", help="Track name for deterministic variation")
     parser.add_argument("--model", default=None, help="Optional trained ML model path")
-    parser.add_argument("--ml_blend", type=float, default=0.3, help="Blend factor for ML refinement")
+    parser.add_argument("--ml_blend", type=float, default=0.2, help="Blend factor for ML refinement")
     args = parser.parse_args()
 
     df = pd.read_csv(args.features)
